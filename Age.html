@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Age Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: white;
+      color: black;
+      padding: 20px;
+      transition: background 0.5s, color 0.5s;
+    }
+    .dark {
+      background-color: #121212;
+      color: white;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+    }
+    input, select, button {
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+    }
+    #history {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Age Calculator</h2>
+    
+    <label for="dob">Enter Your Date of Birth:</label>
+    <input type="date" id="dob" />
+
+    <button onclick="calculateAge()">Calculate Age</button>
+    
+    <h3 id="result"></h3>
+    <p id="zodiac"></p>
+    <p id="birthday"></p>
+    <p id="liveTime"></p>
+    <button onclick="toggleTheme()">Toggle Theme</button>
+    <button onclick="shareResult()">Share Result</button>
+
+    <h4>Saved Age History:</h4>
+    <ul id="history"></ul>
+  </div>
+
+  <script>
+    let theme = 'light';
+    function toggleTheme() {
+      theme = theme === 'light' ? 'dark' : 'light';
+      document.body.className = theme;
+    }
+
+    function calculateAge() {
+      const dobInput = document.getElementById('dob').value;
+      if (!dobInput) return alert("Please enter your date of birth!");
+
+      const dob = new Date(dobInput);
+      const now = new Date();
+
+      let years = now.getFullYear() - dob.getFullYear();
+      let months = now.getMonth() - dob.getMonth();
+      let days = now.getDate() - dob.getDate();
+      let hours = Math.floor((now - dob) / (1000 * 60 * 60));
+
+      if (months < 0 || (months === 0 && days < 0)) {
+        years--;
+        months += 12;
+      }
+      if (days < 0) {
+        const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += lastMonth.getDate();
+        months--;
+      }
+
+      const result = `Your age is: ${years} years, ${months} months, ${days} days (${hours} hours total)`;
+      document.getElementById('result').innerText = result;
+      document.getElementById('zodiac').innerText = "Zodiac: " + getZodiac(dob);
+      document.getElementById('birthday').innerText = "Next Birthday: " + getNextBirthday(dob);
+
+      // Save history
+      const historyList = document.getElementById('history');
+      const listItem = document.createElement('li');
+      listItem.innerText = result;
+      historyList.appendChild(listItem);
+
+      // Live time update
+      clearInterval(window.liveTimer);
+      window.liveTimer = setInterval(() => {
+        const nowNew = new Date();
+        const totalHours = Math.floor((nowNew - dob) / (1000 * 60 * 60));
+        document.getElementById('liveTime').innerText = `Live Age Hours: ${totalHours} hrs`;
+      }, 3600000); // Update every hour
+    }
+
+    function getZodiac(dob) {
+      const day = dob.getDate();
+      const month = dob.getMonth() + 1;
+      const zodiacs = [
+        ["Capricorn", 20], ["Aquarius", 19], ["Pisces", 20], ["Aries", 20], ["Taurus", 21], ["Gemini", 21],
+        ["Cancer", 23], ["Leo", 23], ["Virgo", 23], ["Libra", 23], ["Scorpio", 22], ["Sagittarius", 22], ["Capricorn", 31]
+      ];
+      return (day < zodiacs[month - 1][1]) ? zodiacs[month - 1][0] : zodiacs[month][0];
+    }
+
+    function getNextBirthday(dob) {
+      const now = new Date();
+      const birthdayThisYear = new Date(now.getFullYear(), dob.getMonth(), dob.getDate());
+      if (birthdayThisYear < now) {
+        birthdayThisYear.setFullYear(now.getFullYear() + 1);
+      }
+      const diffDays = Math.ceil((birthdayThisYear - now) / (1000 * 60 * 60 * 24));
+      return `${birthdayThisYear.toDateString()} (${diffDays} days left)`;
+    }
+
+    function shareResult() {
+      const resultText = document.getElementById('result').innerText;
+      navigator.clipboard.writeText(resultText + " - Calculated on Age Calculator").then(() => {
+        alert("Result copied to clipboard!");
+      });
+    }
+  </script>
+</body>
+</html>
